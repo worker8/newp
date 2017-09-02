@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'crashlytics'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion 26
@@ -25,6 +26,13 @@ android {
         jcenter()
         maven { url 'https://maven.google.com' }
     }
+    dexOptions {
+        javaMaxHeapSize "4g"
+    }
+    packagingOptions {
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/LICENSE'
+    }
 }
 
 
@@ -34,6 +42,7 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 
+    compile project(':rxjraw')
     compile "com.android.support:appcompat-v7:$supportVersion"
     compile "com.android.support:design:$supportVersion"
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
@@ -41,15 +50,21 @@ dependencies {
     compile "android.arch.lifecycle:runtime:$archComponentVersion"
     compile "android.arch.lifecycle:extensions:$archComponentVersion"
     annotationProcessor "android.arch.lifecycle:compiler:$archComponentVersion"
+    compile "android.arch.persistence.room:rxjava2:$archComponentVersion"
+
+    compile "android.arch.persistence.room:runtime:$archComponentVersion"
+    annotationProcessor "android.arch.persistence.room:compiler:$archComponentVersion"
 
     compile "com.squareup.retrofit2:retrofit:$retrofitVersion"
     compile "com.squareup.retrofit2:converter-gson:$retrofitVersion"
 
     compile "io.reactivex.rxjava2:rxjava:2.1.3"
     compile "io.reactivex.rxjava2:rxandroid:2.0.1"
+    compile "com.jakewharton.rxbinding2:rxbinding:2.0.0"
 
-    compile 'com.android.support:multidex:1.0.0'
+    compile "com.android.support:multidex:1.0.0"
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 
     testCompile 'junit:junit:4.12'
+    // testCompile "android.arch.persistence.room:testing:$archComponentVersion"
 }

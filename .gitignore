@@ -1,0 +1,32 @@
+*.iml
+*.iws
+*.ipr
+.idea/
+.gradle/
+local.properties
+
+*/build/
+secret.gradle
+proguard.map
+
+*~
+*.swp
+.DS_Store
+build
+
+# Keystore
+signing.gradle
+
+# Crashlytics
+com_crashlytics_export_strings.xml
+crashlytics-build.properties
+crashlytics.properties
+
+# pt-flow
+.pt
+
+# key credention to deploy to Playstore
+google_play_android_developer_keys.json
+
+# integration tests
+artifacts
