@@ -1,0 +1,32 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    ext {
+        kotlin_version = '1.1.4-2'
+        retrofitVersion = '2.3.0'
+        archComponentVersion = '1.0.0-alpha9'
+        supportVersion = '26.0.0'
+    }
+    repositories {
+        jcenter()
+        maven { url 'http://download.crashlytics.com/maven' }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.3.3'
+        classpath 'com.crashlytics.tools.gradle:crashlytics-gradle:1.+'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        maven { url "https://jitpack.io" }
+        jcenter()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
