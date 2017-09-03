@@ -7,6 +7,7 @@ import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import beepbeep.pixels.R
@@ -27,6 +28,13 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         toggle.syncState()
 
         navigationView.setNavigationItemSelectedListener(this)
+
+        val homeRepo = HomeRepo()
+        homeRepo.getSubmissions().subscribe {
+            it.forEachIndexed { index, submission ->
+                Log.d("ddw", "${index}: ${submission.title}")
+            }
+        }
     }
 
     override fun onBackPressed() {

@@ -4,6 +4,13 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'crashlytics'
 apply plugin: 'kotlin-kapt'
 
+
+def getSecretProps() {
+    Properties secretProps = new Properties()
+    secretProps.load(project.file('../secrets.properties').newDataInputStream())
+    return secretProps
+}
+
 android {
     compileSdkVersion 26
     buildToolsVersion "26.0.1"
@@ -16,12 +23,22 @@ android {
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+    Properties secretProps = getSecretProps()
     buildTypes {
+        debug{
+            buildConfigField "String", "REDDIT_DEVELOPER_NAME", secretProps["REDDIT_DEVELOPER_NAME"]
+            buildConfigField "String", "REDDIT_CLIENT_ID", secretProps["REDDIT_CLIENT_ID"]
+            buildConfigField "String", "REDDIT_REDIRECT_URL", secretProps["REDDIT_REDIRECT_URL"]
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            buildConfigField "String", "REDDIT_DEVELOPER_NAME", secretProps["REDDIT_DEVELOPER_NAME"]
+            buildConfigField "String", "REDDIT_CLIENT_ID", secretProps["REDDIT_CLIENT_ID"]
+            buildConfigField "String", "REDDIT_REDIRECT_URL", secretProps["REDDIT_REDIRECT_URL"]
         }
     }
+
     repositories {
         jcenter()
         maven { url 'https://maven.google.com' }

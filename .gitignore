@@ -1,3 +1,6 @@
+# keeping secrets in this file
+secrets.properties
+
 *.iml
 *.iws
 *.ipr
