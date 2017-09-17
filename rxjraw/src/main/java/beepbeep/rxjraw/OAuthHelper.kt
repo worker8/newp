@@ -18,6 +18,6 @@ class RxOAuthHelper(redditClient: RedditClient) {
             } catch (exception: NetworkException) {
                 emitter.onError(exception)
             }
-        }.subscribeOn(Schedulers.io())
+        }.subscribeOn(Schedulers.newThread())
     }
 }

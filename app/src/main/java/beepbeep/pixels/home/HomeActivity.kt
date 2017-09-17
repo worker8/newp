@@ -7,15 +7,32 @@ import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import beepbeep.pixels.R
+import beepbeep.pixels.shared.extension.isConnectedToInternet
+import com.jakewharton.rxbinding2.view.RxView
+import io.reactivex.Observable
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.app_bar_home.*
+import kotlinx.android.synthetic.main.content_home.*
 
 class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, LifecycleRegistryOwner {
-    override fun getLifecycle() = LifecycleRegistry(this)
+    private val registry = LifecycleRegistry(this)
+    override fun getLifecycle() = registry
+
+    private val input by lazy {
+        object : HomeContract.Input {
+            override fun isConnectedToInternet(): Boolean =
+                    this@HomeActivity.isConnectedToInternet()
+
+            override val loadMore: Observable<Unit> by lazy {
+                RxView.clicks(loadMoreButton).map { Unit }
+            }
+        }
+    }
+    lateinit var presenter: HomePresenter
+    val repo = HomeRepo()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,13 +45,13 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         toggle.syncState()
 
         navigationView.setNavigationItemSelectedListener(this)
+        presenter = HomePresenter(input, repo)
 
-        val homeRepo = HomeRepo()
-        homeRepo.getSubmissions().subscribe {
-            it.forEachIndexed { index, submission ->
-                Log.d("ddw", "${index}: ${submission.title}")
-            }
-        }
+        lifecycle.addObserver(presenter)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 
     override fun onBackPressed() {

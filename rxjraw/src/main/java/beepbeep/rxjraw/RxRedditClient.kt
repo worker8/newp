@@ -25,6 +25,6 @@ class RxRedditClient {
             } catch (exception: Exception) {
                 emitter.onError(exception)
             }
-        }.subscribeOn(Schedulers.io())
+        }.subscribeOn(Schedulers.newThread())
     }
 }
