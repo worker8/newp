@@ -14,11 +14,14 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 
 
-class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface) : LifecycleObserver {
+class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface = HomeRepo()) : LifecycleObserver {
     val disposables = CompositeDisposable()
     val onDataLoaded = PublishSubject.create<Unit>()
+    val showNoInternetSnackbarSubject = PublishSubject.create<Unit>()
 
     val output = object : HomeContract.Output() {
+        override val showNoInternetSnackbar: Observable<Unit>
+            get() = showNoInternetSnackbarSubject.hide()
         override val onDataLoaded: Observable<Unit>
             get() = onDataLoaded.hide()
     }
@@ -43,22 +46,36 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface) 
                     it.printStackTrace()
                 })
                 .addTo(disposables)
-        val loadMoreClick = input.loadMore.publish()
-        loadMoreClick
+
+        Observable.merge(input.loadMore, input.retry).publish()
+                .also { loadTrigger /* combined loading trigger*/ ->
+                    loadTrigger.map { input.isConnectedToInternet() }
+                            .filter { it }
+                            .filter { repo.isRedditClientAuthed() }
+                            .subscribeOn(AndroidSchedulers.mainThread())
+                            .observeOn(Schedulers.newThread())
+                            .subscribe { repo.loadMore() }
+                            .addTo(disposables)
+
+                    loadTrigger.map { input.isConnectedToInternet() }
+                            .filter { !it }
+                            .subscribeOn(AndroidSchedulers.mainThread())
+                            .observeOn(Schedulers.newThread())
+                            .subscribe { showNoInternetSnackbarSubject.onNext(Unit) }
+                            .addTo(disposables)
+                }
+                .connect()
+                .addTo(disposables)
+
+        input.retry
                 .map { input.isConnectedToInternet() }
                 .filter { it }
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .observeOn(Schedulers.newThread())
-                .subscribe { repo.loadMore() }
+                .filter { !repo.isRedditClientAuthed() }
+                .subscribe {
+                    repo.initGuestRedditClient()
+                    repo.loadMore()
+                }
                 .addTo(disposables)
-        loadMoreClick
-                .map { input.isConnectedToInternet() }
-                .filter { !it }
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .observeOn(Schedulers.newThread())
-                .subscribe { }
-                .addTo(disposables)
-        loadMoreClick.connect()
 
         repo.bindToDb()?.subscribe { listing ->
             listing.forEachIndexed { index, submissionCache ->
@@ -66,6 +83,12 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface) 
             }
         }?.addTo(disposables)
 
+        if (input.isConnectedToInternet()) {
+            repo.initGuestRedditClient()
+            repo.loadMore()
+        } else {
+            showNoInternetSnackbarSubject.onNext(Unit)
+        }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)

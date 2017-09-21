@@ -4,7 +4,6 @@ import io.reactivex.Observable
 import net.dean.jraw.RedditClient
 import net.dean.jraw.http.UserAgent
 import net.dean.jraw.http.oauth.Credentials
-import net.dean.jraw.http.oauth.OAuthData
 import java.util.*
 
 class RedditClientRepo {
@@ -18,9 +17,14 @@ class RedditClientRepo {
                         BuildConfig.REDDIT_DEVELOPER_NAME)
                 val redditClient = RedditClient(userAgent)
                 val credentials = Credentials.userlessApp(BuildConfig.REDDIT_CLIENT_ID, UUID.randomUUID())
-                val authData: OAuthData = redditClient.oAuthHelper.easyAuth(credentials)
-                Log.d("ddw","[authData]: ${authData}, expirationDate: ${authData.expirationDate}")
-                redditClient.authenticate(authData)
+                try {
+                    val authData = redditClient.oAuthHelper.easyAuth(credentials)
+                    Log.d("ddw", "[authData]: ${authData}, expirationDate: ${authData.expirationDate}")
+                    redditClient.authenticate(authData)
+                } catch (e: Exception) {
+                    emitter.onError(e)
+                }
+
                 emitter.onNext(redditClient)
                 emitter.onComplete()
             }
