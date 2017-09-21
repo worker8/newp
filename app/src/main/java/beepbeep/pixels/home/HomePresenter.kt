@@ -28,33 +28,74 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
 
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     fun onCreate() {
-        repo.data()
-                .doOnNext { (started, submissionListing) ->
-                    if (!started) {
-                        repo.deleteAllFromSub()
-                    }
-                }
-                .subscribe(
-                        // onNext
-                        { (started, submissionListing) ->
-                            submissionListing.forEachIndexed { index, submission ->
-                                PixelsApplication.pixelsCache?.submissionDao()?.insert(SubmissionCache(submission))
-                            }
-                        },
-                        // onError
-                        {
-                            it.printStackTrace()
-                        })
-                .addTo(disposables)
+//        repo.data()
+//                .doOnNext { (started, submissionListing) ->
+//                    if (!started) {
+//                        repo.deleteAllFromSub()
+//                    }
+//                }
+//                .subscribe(
+//                        // onNext
+//                        { (started, submissionListing) ->
+//                            submissionListing.forEachIndexed { index, submission ->
+//                                PixelsApplication.pixelsCache?.submissionDao()?.insert(SubmissionCache(submission))
+//                            }
+//                        },
+//                        // onError
+//                        {
+//                            it.printStackTrace()
+//                        })
+//                .addTo(disposables)
 
         Observable.merge(input.loadMore, input.retry).publish()
                 .also { loadTrigger /* combined loading trigger*/ ->
                     loadTrigger.map { input.isConnectedToInternet() }
                             .filter { it }
+                            .filter { !repo.isRedditClientAuthed() }
+                            .subscribeOn(AndroidSchedulers.mainThread())
+                            .observeOn(Schedulers.newThread())
+                            .flatMap { repo.initGuestRedditClient() }
+                            .flatMap { repo.data() }
+                            .doOnNext { (started, submissionListing) ->
+                                if (!started) {
+                                    repo.deleteAllFromSub()
+                                }
+                            }
+                            .subscribe(
+                                    // onNext
+                                    { (started, submissionListing) ->
+                                        submissionListing.forEachIndexed { index, submission ->
+                                            PixelsApplication.pixelsCache?.submissionDao()?.insert(SubmissionCache(submission))
+                                        }
+                                    },
+                                    // onError
+                                    {
+                                        it.printStackTrace()
+                                    })
+                            .addTo(disposables)
+
+                    loadTrigger.map { input.isConnectedToInternet() }
+                            .filter { it }
                             .filter { repo.isRedditClientAuthed() }
                             .subscribeOn(AndroidSchedulers.mainThread())
                             .observeOn(Schedulers.newThread())
-                            .subscribe { repo.loadMore() }
+                            .flatMap { repo.data() }
+                            .doOnNext { (started, submissionListing) ->
+                                if (!started) {
+                                    repo.deleteAllFromSub()
+                                }
+                            }
+                            .subscribe(
+                                    // onNext
+                                    { (started, submissionListing) ->
+                                        submissionListing.forEachIndexed { index, submission ->
+                                            PixelsApplication.pixelsCache?.submissionDao()?.insert(SubmissionCache(submission))
+                                        }
+                                    },
+                                    // onError
+                                    {
+                                        it.printStackTrace()
+                                    })
                             .addTo(disposables)
 
                     loadTrigger.map { input.isConnectedToInternet() }
@@ -67,14 +108,38 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
                 .connect()
                 .addTo(disposables)
 
-        input.retry
-                .map { input.isConnectedToInternet() }
-                .filter { it }
-                .filter { !repo.isRedditClientAuthed() }
-                .subscribe {
-                    repo.initGuestRedditClient()
-                    repo.loadMore()
+        val onCreateSubject = PublishSubject.create<Unit>()
+        Observable.merge(onCreateSubject, input.retry).publish()
+                .also { trigger ->
+                    trigger.map { input.isConnectedToInternet() }
+                            .filter { it }
+                            .filter { !repo.isRedditClientAuthed() }
+                            .flatMap { repo.initGuestRedditClient() }
+                            .flatMap { repo.data() }
+                            .doOnNext { (started, submissionListing) ->
+                                if (!started) {
+                                    repo.deleteAllFromSub()
+                                }
+                            }
+                            .subscribe(
+                                    // onNext
+                                    { (started, submissionListing) ->
+                                        submissionListing.forEachIndexed { index, submission ->
+                                            PixelsApplication.pixelsCache?.submissionDao()?.insert(SubmissionCache(submission))
+                                        }
+                                    },
+                                    // onError
+                                    {
+                                        it.printStackTrace()
+                                    })
+                    trigger.map { input.isConnectedToInternet() }
+                            .filter { !it }
+                            .subscribeOn(AndroidSchedulers.mainThread())
+                            .observeOn(Schedulers.newThread())
+                            .subscribe { showNoInternetSnackbarSubject.onNext(Unit) }
+                            .addTo(disposables)
                 }
+                .connect()
                 .addTo(disposables)
 
         repo.bindToDb()?.subscribe { listing ->
@@ -83,12 +148,13 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
             }
         }?.addTo(disposables)
 
-        if (input.isConnectedToInternet()) {
-            repo.initGuestRedditClient()
-            repo.loadMore()
-        } else {
-            showNoInternetSnackbarSubject.onNext(Unit)
-        }
+        onCreateSubject.onNext(Unit)
+//        if (input.isConnectedToInternet()) {
+//            repo.initGuestRedditClient()
+//            repo.loadMore()
+//        } else {
+//            showNoInternetSnackbarSubject.onNext(Unit)
+//        }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)

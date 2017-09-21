@@ -20,7 +20,6 @@ class RedditClientRepo {
                 try {
                     val authData = redditClient.oAuthHelper.easyAuth(credentials)
                     redditClient.authenticate(authData)
-                    Log.d("ddw", "[authData]: ${authData}, expirationDate: ${authData.expirationDate}")
                 } catch (e: Exception) {
                     emitter.onError(e)
                 }

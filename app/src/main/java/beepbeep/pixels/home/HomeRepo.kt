@@ -1,13 +1,12 @@
 package beepbeep.pixels.home
 
 import RedditClientRepo
+import android.util.Log
 import beepbeep.pixels.cache.submission.SubmissionCache
 import beepbeep.pixels.shared.PixelsApplication
-import beepbeep.pixels.shared.extension.addTo
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
@@ -15,6 +14,7 @@ import net.dean.jraw.RedditClient
 import net.dean.jraw.models.Listing
 import net.dean.jraw.models.Submission
 import net.dean.jraw.paginators.SubredditPaginator
+import java.util.*
 
 class HomeRepo : HomeRepoInterface {
     lateinit private var subredditPaginator: BehaviorSubject<SubredditPaginator>
@@ -39,33 +39,42 @@ class HomeRepo : HomeRepoInterface {
 
     override fun isRedditClientAuthed(): Boolean {
         redditClient?.let {
-            return it.isAuthenticated
+            if (isNotExpire(it.oAuthData.expirationDate)) {
+                return it.isAuthenticated
+            }
         }
         return false
     }
 
-    override fun initGuestRedditClient() {
-        RedditClientRepo
+    private fun isNotExpire(expireDate: Date): Boolean {
+        val nowDate = Date()
+        return nowDate.before(expireDate)
+    }
+
+    override fun initGuestRedditClient(): Observable<RedditClient> {
+        return RedditClientRepo
                 .createGuestRedditClient()
                 .subscribeOn(Schedulers.io())
-                .doOnNext { redditClient = it }
-                .subscribe {
-                    redditClientSubject.onNext(it)
+                .doOnNext {
+                    redditClient = it
                 }
-                .addTo(disposables)
+                .doOnNext { subredditPaginator.onNext(SubredditPaginator(it)) }
     }
 
     override fun data(): Observable<Pair<Boolean, Listing<Submission>>> {
-        val paginatorObs = redditClientSubject
-                .map { SubredditPaginator(it) }
+        return subredditPaginator.doOnNext { Log.d("ddw", "sub address: ${it}") }
+                .map { paginator -> paginator.run { hasStarted() to next() } }
                 .subscribeOn(Schedulers.io())
-        return Observable.combineLatest(
-                paginatorObs,
-                loadMoreSubject,
-                BiFunction<SubredditPaginator, Unit, Pair<Boolean, Listing<Submission>>> { paginator, Unit ->
-                    paginator.run { hasStarted() to next() }
-                })
-                .subscribeOn(Schedulers.io())
+//        val paginatorObs = redditClientSubject
+//                .map { SubredditPaginator(it) }
+//                .subscribeOn(Schedulers.io())
+//        return Observable.combineLatest(
+//                paginatorObs,
+//                loadMoreSubject,
+//                BiFunction<SubredditPaginator, Unit, Pair<Boolean, Listing<Submission>>> { paginator, Unit ->
+//                    paginator.run { hasStarted() to next() }
+//                })
+//                .subscribeOn(Schedulers.io())
     }
 
     override fun loadMore() {
@@ -90,7 +99,7 @@ class HomeRepo : HomeRepoInterface {
 }
 
 interface HomeRepoInterface {
-    fun initGuestRedditClient()
+    fun initGuestRedditClient(): Observable<RedditClient>
     fun isRedditClientAuthed(): Boolean
     fun reset()
     fun loadMore()
