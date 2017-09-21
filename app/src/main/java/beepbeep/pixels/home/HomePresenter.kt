@@ -26,10 +26,6 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
             get() = onDataLoaded.hide()
     }
 
-    init {
-
-    }
-
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     fun onCreate() {
         repo.data()
@@ -38,13 +34,17 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
                         repo.deleteAllFromSub()
                     }
                 }
-                .subscribe({ (started, submissionListing) ->
-                    submissionListing.forEachIndexed { index, submission ->
-                        PixelsApplication.pixelsCache?.submissionDao()?.insert(SubmissionCache(submission))
-                    }
-                }, {
-                    it.printStackTrace()
-                })
+                .subscribe(
+                        // onNext
+                        { (started, submissionListing) ->
+                            submissionListing.forEachIndexed { index, submission ->
+                                PixelsApplication.pixelsCache?.submissionDao()?.insert(SubmissionCache(submission))
+                            }
+                        },
+                        // onError
+                        {
+                            it.printStackTrace()
+                        })
                 .addTo(disposables)
 
         Observable.merge(input.loadMore, input.retry).publish()
@@ -94,5 +94,6 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun onDestroy() {
         disposables.dispose()
+        repo.destroy()
     }
 }

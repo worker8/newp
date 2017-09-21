@@ -19,8 +19,8 @@ class RedditClientRepo {
                 val credentials = Credentials.userlessApp(BuildConfig.REDDIT_CLIENT_ID, UUID.randomUUID())
                 try {
                     val authData = redditClient.oAuthHelper.easyAuth(credentials)
-                    Log.d("ddw", "[authData]: ${authData}, expirationDate: ${authData.expirationDate}")
                     redditClient.authenticate(authData)
+                    Log.d("ddw", "[authData]: ${authData}, expirationDate: ${authData.expirationDate}")
                 } catch (e: Exception) {
                     emitter.onError(e)
                 }
