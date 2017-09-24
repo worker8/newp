@@ -6,10 +6,7 @@ import android.arch.lifecycle.OnLifecycleEvent
 import android.util.Log
 import beepbeep.pixels.cache.submission.SubmissionCache
 import beepbeep.pixels.shared.PixelsApplication
-import beepbeep.pixels.shared.extension.addTo
-import beepbeep.pixels.shared.extension.downBackgroundThread
-import beepbeep.pixels.shared.extension.downMainUiThread
-import beepbeep.pixels.shared.extension.upBackgroundThread
+import beepbeep.pixels.shared.extension.*
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
@@ -37,9 +34,29 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
         }
     }
 
+    private fun deleteOldSubmission(pair: Pair<Boolean, Listing<Submission>>) {
+        val (started, submissionListing) = pair
+        if (!started) {
+            repo.deleteAllFromSub()
+        }
+    }
+
     @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
     fun onCreate() {
         val initialTrigger = PublishSubject.create<Unit>()
+
+        // refresh flow
+        input.refresh
+                .upMainUiThread()
+                .map { input.isConnectedToInternet() }
+                .filter { it }
+                .map { repo.initGuestRedditClient() }
+                .flatMap { repo.data(it) }
+                .doOnNext { deleteOldSubmission(it) }
+                .upBackgroundThread()
+                .downBackgroundThread()
+                .subscribe(onDataLoaded())
+                .addTo(disposables)
 
         Observable
                 .merge(initialTrigger, input.retry, input.loadMore)
@@ -51,11 +68,7 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
                             .filter { !repo.isRedditClientAuthed() }
                             .map { repo.initGuestRedditClient() }
                             .flatMap { repo.data(it) }
-                            .doOnNext { (started, submissionListing) ->
-                                if (!started) {
-                                    repo.deleteAllFromSub()
-                                }
-                            }
+                            .doOnNext { deleteOldSubmission(it) }
                             .upBackgroundThread()
                             .downBackgroundThread()
                             .subscribe(onDataLoaded())

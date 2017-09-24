@@ -33,9 +33,14 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             override fun isConnectedToInternet(): Boolean =
                     this@HomeActivity.isConnectedToInternet()
 
-            override val loadMore: Observable<Unit> by lazy {
-                RxView.clicks(loadMoreButton).map { Unit }
+            override val refresh: Observable<Any>by lazy {
+                RxView.clicks(refreshButton)
             }
+
+            override val loadMore: Observable<Any> by lazy {
+                RxView.clicks(loadMoreButton)
+            }
+
             override val retry = retrySubject.hide()
         }
     }

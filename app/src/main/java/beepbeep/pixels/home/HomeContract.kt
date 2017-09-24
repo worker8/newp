@@ -6,7 +6,8 @@ import io.reactivex.Observable
 class HomeContract {
     interface Input {
         fun isConnectedToInternet(): Boolean
-        val loadMore: Observable<Unit>
+        val loadMore: Observable<Any>
+        val refresh: Observable<Any>
         val retry: Observable<Unit>
     }
 
