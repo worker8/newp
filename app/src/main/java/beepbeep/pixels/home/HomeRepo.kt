@@ -1,13 +1,12 @@
 package beepbeep.pixels.home
 
 import RedditClientRepo
-import android.util.Log
 import beepbeep.pixels.cache.submission.SubmissionCache
 import beepbeep.pixels.shared.PixelsApplication
+import beepbeep.pixels.shared.extension.upBackgroundThread
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import net.dean.jraw.RedditClient
@@ -17,13 +16,14 @@ import net.dean.jraw.paginators.SubredditPaginator
 import java.util.*
 
 class HomeRepo : HomeRepoInterface {
-    lateinit private var subredditPaginator: BehaviorSubject<SubredditPaginator>
+    lateinit private var subredditPaginator: PublishSubject<SubredditPaginator>
     lateinit private var loadMoreSubject: BehaviorSubject<Unit>
     lateinit private var redditClientSubject: BehaviorSubject<RedditClient>
     lateinit private var dataSubject: PublishSubject<Pair<SubredditPaginator, Listing<Submission>>>
     lateinit private var disposables: CompositeDisposable
 
     private var redditClient: RedditClient? = null
+    private var paginator: SubredditPaginator? = null
 
     init {
         reset()
@@ -34,14 +34,12 @@ class HomeRepo : HomeRepoInterface {
         redditClientSubject = BehaviorSubject.create<RedditClient>()
         dataSubject = PublishSubject.create<Pair<SubredditPaginator, Listing<Submission>>>()
         disposables = CompositeDisposable()
-        subredditPaginator = BehaviorSubject.create<SubredditPaginator>()
+        subredditPaginator = PublishSubject.create<SubredditPaginator>()
     }
 
     override fun isRedditClientAuthed(): Boolean {
         redditClient?.let {
-            if (isNotExpire(it.oAuthData.expirationDate)) {
-                return it.isAuthenticated
-            }
+            return it.isAuthenticated
         }
         return false
     }
@@ -51,30 +49,26 @@ class HomeRepo : HomeRepoInterface {
         return nowDate.before(expireDate)
     }
 
-    override fun initGuestRedditClient(): Observable<RedditClient> {
+    override fun initGuestRedditClient(): Observable<SubredditPaginator> {
         return RedditClientRepo
                 .createGuestRedditClient()
-                .subscribeOn(Schedulers.io())
-                .doOnNext {
-                    redditClient = it
+                .doOnNext { redditClient = it }
+                .map {
+                    SubredditPaginator(it).also { _paginator ->
+                        paginator = _paginator
+                    }
                 }
-                .doOnNext { subredditPaginator.onNext(SubredditPaginator(it)) }
+                .upBackgroundThread()
     }
 
-    override fun data(): Observable<Pair<Boolean, Listing<Submission>>> {
-        return subredditPaginator.doOnNext { Log.d("ddw", "sub address: ${it}") }
-                .map { paginator -> paginator.run { hasStarted() to next() } }
-                .subscribeOn(Schedulers.io())
-//        val paginatorObs = redditClientSubject
-//                .map { SubredditPaginator(it) }
-//                .subscribeOn(Schedulers.io())
-//        return Observable.combineLatest(
-//                paginatorObs,
-//                loadMoreSubject,
-//                BiFunction<SubredditPaginator, Unit, Pair<Boolean, Listing<Submission>>> { paginator, Unit ->
-//                    paginator.run { hasStarted() to next() }
-//                })
-//                .subscribeOn(Schedulers.io())
+    override fun getPaginator(): Observable<SubredditPaginator> {
+        return Observable.just(paginator)
+    }
+
+    override fun data(paginatorObs: Observable<SubredditPaginator>): Observable<Pair<Boolean, Listing<Submission>>> {
+        return paginatorObs
+                .map { it.hasStarted() to it.next() }
+                .upBackgroundThread()
     }
 
     override fun loadMore() {
@@ -99,11 +93,12 @@ class HomeRepo : HomeRepoInterface {
 }
 
 interface HomeRepoInterface {
-    fun initGuestRedditClient(): Observable<RedditClient>
+    fun initGuestRedditClient(): Observable<SubredditPaginator>
+    fun getPaginator(): Observable<SubredditPaginator>
     fun isRedditClientAuthed(): Boolean
     fun reset()
     fun loadMore()
-    fun data(): Observable<Pair<Boolean, Listing<Submission>>>
+    fun data(paginatorObs: Observable<SubredditPaginator>): Observable<Pair<Boolean, Listing<Submission>>>
     fun destroy()
     fun bindToDb(): Flowable<List<SubmissionCache>>?
     fun deleteAllFromSub()

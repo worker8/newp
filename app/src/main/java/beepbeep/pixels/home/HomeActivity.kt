@@ -12,6 +12,7 @@ import android.view.Menu
 import android.view.MenuItem
 import beepbeep.pixels.R
 import beepbeep.pixels.shared.extension.addTo
+import beepbeep.pixels.shared.extension.downMainUiThread
 import beepbeep.pixels.shared.extension.isConnectedToInternet
 import com.jakewharton.rxbinding2.view.RxView
 import io.reactivex.Observable
@@ -54,13 +55,14 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         navigationView.setNavigationItemSelectedListener(this)
         presenter = HomePresenter(input)
 
-        lifecycle.addObserver(presenter)
         bindView()
+        lifecycle.addObserver(presenter)
     }
 
     fun bindView() {
         presenter.output.apply {
             showNoInternetSnackbar
+                    .downMainUiThread()
                     .subscribe {
                         Snackbar.make(homeMainContent, getString(R.string.no_internet_warning), Snackbar.LENGTH_INDEFINITE)
                                 .setAction(getString(R.string.retry), { retrySubject.onNext(Unit) })
