@@ -3,7 +3,7 @@ package beepbeep.pixels.home
 import RedditClientRepo
 import beepbeep.pixels.cache.submission.SubmissionCache
 import beepbeep.pixels.shared.PixelsApplication
-import beepbeep.pixels.shared.extension.upBackgroundThread
+import beepbeep.pixels.shared.extension.upScheduler
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.Scheduler
@@ -61,7 +61,7 @@ class HomeRepo : HomeRepoInterface {
                         paginator = _paginator
                     }
                 }
-                .upBackgroundThread()
+                .upScheduler(getBackgroundThread())
     }
 
     override fun getPaginator(): Observable<SubredditPaginator> {
@@ -71,7 +71,7 @@ class HomeRepo : HomeRepoInterface {
     override fun data(paginatorObs: Observable<SubredditPaginator>): Observable<Pair<Boolean, Listing<Submission>>> {
         return paginatorObs
                 .map { it.hasStarted() to it.next() }
-                .upBackgroundThread()
+                .upScheduler(getBackgroundThread())
     }
 
     override fun loadMore() {

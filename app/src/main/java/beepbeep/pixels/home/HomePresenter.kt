@@ -8,14 +8,12 @@ import beepbeep.pixels.cache.submission.SubmissionCache
 import beepbeep.pixels.shared.PixelsApplication
 import beepbeep.pixels.shared.extension.addTo
 import beepbeep.pixels.shared.extension.downScheduler
-import beepbeep.pixels.shared.extension.upMainUiThread
 import beepbeep.pixels.shared.extension.upScheduler
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
 import net.dean.jraw.models.Listing
 import net.dean.jraw.models.Submission
-
 
 class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface = HomeRepo()) : LifecycleObserver {
     val disposables = CompositeDisposable()
@@ -50,7 +48,7 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
 
         // refresh flow
         input.refresh
-                .upMainUiThread()
+                .upScheduler(repo.getMainUiThread())
                 .map { input.isConnectedToInternet() }
                 .filter { it }
                 .map { repo.initGuestRedditClient() }

@@ -12,10 +12,11 @@ import android.view.Menu
 import android.view.MenuItem
 import beepbeep.pixels.R
 import beepbeep.pixels.shared.extension.addTo
-import beepbeep.pixels.shared.extension.downMainUiThread
+import beepbeep.pixels.shared.extension.downScheduler
 import beepbeep.pixels.shared.extension.isConnectedToInternet
 import com.jakewharton.rxbinding2.view.RxView
 import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.activity_home.*
@@ -67,7 +68,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     fun bindView() {
         presenter.output.apply {
             showNoInternetSnackbar
-                    .downMainUiThread()
+                    .downScheduler(AndroidSchedulers.mainThread())
                     .subscribe {
                         Snackbar.make(homeMainContent, getString(R.string.no_internet_warning), Snackbar.LENGTH_INDEFINITE)
                                 .setAction(getString(R.string.retry), { retrySubject.onNext(Unit) })
