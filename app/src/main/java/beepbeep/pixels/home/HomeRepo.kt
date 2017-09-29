@@ -6,7 +6,10 @@ import beepbeep.pixels.shared.PixelsApplication
 import beepbeep.pixels.shared.extension.upBackgroundThread
 import io.reactivex.Flowable
 import io.reactivex.Observable
+import io.reactivex.Scheduler
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import net.dean.jraw.RedditClient
@@ -90,6 +93,9 @@ class HomeRepo : HomeRepoInterface {
             }
         }
     }
+
+    override fun getBackgroundThread() = Schedulers.io()
+    override fun getMainUiThread() = AndroidSchedulers.mainThread()
 }
 
 interface HomeRepoInterface {
@@ -102,4 +108,7 @@ interface HomeRepoInterface {
     fun destroy()
     fun bindToDb(): Flowable<List<SubmissionCache>>?
     fun deleteAllFromSub()
+
+    fun getBackgroundThread(): Scheduler
+    fun getMainUiThread(): Scheduler
 }

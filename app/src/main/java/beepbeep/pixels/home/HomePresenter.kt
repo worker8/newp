@@ -6,7 +6,10 @@ import android.arch.lifecycle.OnLifecycleEvent
 import android.util.Log
 import beepbeep.pixels.cache.submission.SubmissionCache
 import beepbeep.pixels.shared.PixelsApplication
-import beepbeep.pixels.shared.extension.*
+import beepbeep.pixels.shared.extension.addTo
+import beepbeep.pixels.shared.extension.downScheduler
+import beepbeep.pixels.shared.extension.upMainUiThread
+import beepbeep.pixels.shared.extension.upScheduler
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
@@ -53,8 +56,8 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
                 .map { repo.initGuestRedditClient() }
                 .flatMap { repo.data(it) }
                 .doOnNext { deleteOldSubmission(it) }
-                .upBackgroundThread()
-                .downBackgroundThread()
+                .upScheduler(repo.getBackgroundThread())
+                .downScheduler(repo.getBackgroundThread())
                 .subscribe(onDataLoaded())
                 .addTo(disposables)
 
@@ -69,8 +72,8 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
                             .map { repo.initGuestRedditClient() }
                             .flatMap { repo.data(it) }
                             .doOnNext { deleteOldSubmission(it) }
-                            .upBackgroundThread()
-                            .downBackgroundThread()
+                            .upScheduler(repo.getBackgroundThread())
+                            .downScheduler(repo.getBackgroundThread())
                             .subscribe(onDataLoaded())
 
                     // load more flow
@@ -89,16 +92,16 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
                     // when offline
                     map { !input.isConnectedToInternet() }
                             .filter { it }
-                            .upBackgroundThread()
-                            .downMainUiThread()
+                            .upScheduler(repo.getBackgroundThread())
+                            .downScheduler(repo.getMainUiThread())
                             .subscribe { showNoInternetSnackbarSubject.onNext(Unit) }
                 }
                 .connect()
                 .addTo(disposables)
 
         repo.bindToDb()?.apply {
-            upBackgroundThread()
-                    .downMainUiThread()
+            upScheduler(repo.getBackgroundThread())
+                    .downScheduler(repo.getMainUiThread())
                     .subscribe { listing ->
                         listing.forEachIndexed { index, submissionCache ->
                             Log.d("ddw", "[${index}] ${submissionCache.author}: ${submissionCache.title}")
