@@ -8,6 +8,7 @@ import android.support.design.widget.Snackbar
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import beepbeep.pixels.R
@@ -73,6 +74,13 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         Snackbar.make(homeMainContent, getString(R.string.no_internet_warning), Snackbar.LENGTH_INDEFINITE)
                                 .setAction(getString(R.string.retry), { retrySubject.onNext(Unit) })
                                 .show();
+                    }
+                    .addTo(disposables)
+            onCacheDataLoaded
+                    .subscribe { listing ->
+                        listing.forEachIndexed { index, submissionCache ->
+                            Log.d("ddw", "[${index}] ${submissionCache.author}: ${submissionCache.title}")
+                        }
                     }
                     .addTo(disposables)
         }

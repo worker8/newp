@@ -3,7 +3,6 @@ package beepbeep.pixels.home
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.OnLifecycleEvent
-import android.util.Log
 import beepbeep.pixels.cache.submission.SubmissionCache
 import beepbeep.pixels.shared.PixelsApplication
 import beepbeep.pixels.shared.extension.addTo
@@ -19,8 +18,10 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
     val disposables = CompositeDisposable()
     val onDataLoaded = PublishSubject.create<Unit>()
     val showNoInternetSnackbarSubject = PublishSubject.create<Unit>()
-
+    val onCacheDataLoadedSubject = PublishSubject.create<List<SubmissionCache>>()
     val output = object : HomeContract.Output() {
+        override val onCacheDataLoaded: Observable<List<SubmissionCache>>
+            get() = onCacheDataLoadedSubject.hide()
         override val showNoInternetSnackbar: Observable<Unit>
             get() = showNoInternetSnackbarSubject.hide()
         override val onDataLoaded: Observable<Unit>
@@ -48,16 +49,30 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
 
         // refresh flow
         input.refresh
-                .upScheduler(repo.getMainUiThread())
-                .map { input.isConnectedToInternet() }
-                .filter { it }
-                .map { repo.initGuestRedditClient() }
-                .flatMap { repo.data(it) }
-                .doOnNext { deleteOldSubmission(it) }
-                .upScheduler(repo.getBackgroundThread())
-                .downScheduler(repo.getBackgroundThread())
-                .subscribe(onDataLoaded())
+                .publish()
+                .apply {
+                    upScheduler(repo.getMainUiThread())
+                            .map { input.isConnectedToInternet() }
+                            .filter { it }
+                            .map { repo.initGuestRedditClient() }
+                            .flatMap { repo.data(it) }
+                            .doOnNext { deleteOldSubmission(it) }
+                            .upScheduler(repo.getBackgroundThread())
+                            .downScheduler(repo.getBackgroundThread())
+                            .subscribe(onDataLoaded())
+                            .addTo(disposables)
+
+                    // when offline
+                    upScheduler(repo.getMainUiThread())
+                            .map { !input.isConnectedToInternet() }
+                            .filter { it }
+                            .upScheduler(repo.getBackgroundThread())
+                            .downScheduler(repo.getMainUiThread())
+                            .subscribe { showNoInternetSnackbarSubject.onNext(Unit) }
+                }
+                .connect()
                 .addTo(disposables)
+
 
         Observable
                 .merge(initialTrigger, input.retry, input.loadMore)
@@ -100,11 +115,7 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
         repo.bindToDb()?.apply {
             upScheduler(repo.getBackgroundThread())
                     .downScheduler(repo.getMainUiThread())
-                    .subscribe { listing ->
-                        listing.forEachIndexed { index, submissionCache ->
-                            Log.d("ddw", "[${index}] ${submissionCache.author}: ${submissionCache.title}")
-                        }
-                    }
+                    .subscribe { listing -> onCacheDataLoadedSubject.onNext(listing) }
                     .addTo(disposables)
         }
 
