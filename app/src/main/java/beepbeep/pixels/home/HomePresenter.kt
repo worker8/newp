@@ -28,14 +28,6 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
             get() = onDataLoaded.hide()
     }
 
-    private fun onDataLoaded(): (Pair<Boolean, Listing<Submission>>) -> Unit {
-        return { (started, submissionListing) ->
-            submissionListing.forEachIndexed { index, submission ->
-                PixelsApplication.pixelsCache?.submissionDao()?.insert(SubmissionCache(submission))
-            }
-        }
-    }
-
     private fun deleteOldSubmission(pair: Pair<Boolean, Listing<Submission>>) {
         val (started, submissionListing) = pair
         if (!started) {
@@ -59,7 +51,7 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
                             .doOnNext { deleteOldSubmission(it) }
                             .upScheduler(repo.getBackgroundThread())
                             .downScheduler(repo.getBackgroundThread())
-                            .subscribe(onDataLoaded())
+                            .subscribe { (started, submissionListing) -> repo.insertDb(submissionListing) }
                             .addTo(disposables)
 
                     // when offline
@@ -87,7 +79,7 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
                             .doOnNext { deleteOldSubmission(it) }
                             .upScheduler(repo.getBackgroundThread())
                             .downScheduler(repo.getBackgroundThread())
-                            .subscribe(onDataLoaded())
+                            .subscribe { (started, submissionListing) -> repo.insertDb(submissionListing) }
 
                     // load more flow
                     map { input.isConnectedToInternet() }
@@ -100,7 +92,7 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
                                     repo.deleteAllFromSub()
                                 }
                             }
-                            .subscribe(onDataLoaded())
+                            .subscribe { (started, submissionListing) -> repo.insertDb(submissionListing) }
 
                     // when offline
                     map { !input.isConnectedToInternet() }

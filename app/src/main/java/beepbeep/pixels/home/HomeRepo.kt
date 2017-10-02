@@ -78,6 +78,12 @@ class HomeRepo : HomeRepoInterface {
         loadMoreSubject.onNext(Unit)
     }
 
+    override fun insertDb(submissionListing: Listing<Submission>) {
+        submissionListing.forEachIndexed { index, submission ->
+            PixelsApplication.pixelsCache?.submissionDao()?.insert(SubmissionCache(submission))
+        }
+    }
+
     override fun bindToDb(): Flowable<List<SubmissionCache>>? {
         return PixelsApplication.pixelsCache?.submissionDao()?.getSubmissionCacheFlowable()
     }
@@ -100,15 +106,18 @@ class HomeRepo : HomeRepoInterface {
 
 interface HomeRepoInterface {
     fun initGuestRedditClient(): Observable<SubredditPaginator>
-    fun getPaginator(): Observable<SubredditPaginator>
     fun isRedditClientAuthed(): Boolean
-    fun reset()
-    fun loadMore()
-    fun data(paginatorObs: Observable<SubredditPaginator>): Observable<Pair<Boolean, Listing<Submission>>>
     fun destroy()
-    fun bindToDb(): Flowable<List<SubmissionCache>>?
-    fun deleteAllFromSub()
+    fun reset()
 
+    fun data(paginatorObs: Observable<SubredditPaginator>): Observable<Pair<Boolean, Listing<Submission>>>
+    fun getPaginator(): Observable<SubredditPaginator>
+    fun loadMore()
+
+    fun deleteAllFromSub()
+    fun insertDb(listing: Listing<Submission>)
+
+    fun bindToDb(): Flowable<List<SubmissionCache>>?
     fun getBackgroundThread(): Scheduler
     fun getMainUiThread(): Scheduler
 }
