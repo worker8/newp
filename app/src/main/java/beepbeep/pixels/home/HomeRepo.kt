@@ -64,6 +64,14 @@ class HomeRepo : HomeRepoInterface {
                 .upScheduler(getBackgroundThread())
     }
 
+    override fun initAndGetData(): Observable<SubredditPaginator> {
+        return RedditClientRepo
+                .createGuestRedditClient()
+                .map { SubredditPaginator(it) }
+                //.map { it.hasStarted() to it.next() }
+                .upScheduler(getBackgroundThread())
+    }
+
     override fun getPaginator(): Observable<SubredditPaginator> {
         return Observable.just(paginator)
     }
@@ -102,6 +110,9 @@ class HomeRepo : HomeRepoInterface {
 
     override fun getBackgroundThread() = Schedulers.io()
     override fun getMainUiThread() = AndroidSchedulers.mainThread()
+    override fun nextPair(subredditPaginator: SubredditPaginator): Pair<Boolean, Listing<Submission>>
+            = subredditPaginator.run { hasStarted() to next() }
+
 }
 
 interface HomeRepoInterface {
@@ -109,6 +120,8 @@ interface HomeRepoInterface {
     fun isRedditClientAuthed(): Boolean
     fun destroy()
     fun reset()
+
+    fun initAndGetData(): Observable<SubredditPaginator>
 
     fun data(paginatorObs: Observable<SubredditPaginator>): Observable<Pair<Boolean, Listing<Submission>>>
     fun getPaginator(): Observable<SubredditPaginator>
@@ -120,4 +133,5 @@ interface HomeRepoInterface {
     fun bindToDb(): Flowable<List<SubmissionCache>>?
     fun getBackgroundThread(): Scheduler
     fun getMainUiThread(): Scheduler
+    fun nextPair(subredditPaginator: SubredditPaginator): Pair<Boolean, Listing<Submission>>
 }
