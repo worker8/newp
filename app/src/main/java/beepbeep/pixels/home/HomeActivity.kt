@@ -19,9 +19,12 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
-import kotlinx.android.synthetic.main.activity_home.*
-import kotlinx.android.synthetic.main.app_bar_home.*
-import kotlinx.android.synthetic.main.content_home.*
+import kotlinx.android.synthetic.main.activity_home.drawerLayout
+import kotlinx.android.synthetic.main.activity_home.navigationView
+import kotlinx.android.synthetic.main.app_bar_home.toolbar
+import kotlinx.android.synthetic.main.content_home.homeMainContent
+import kotlinx.android.synthetic.main.content_home.loadMoreButton
+import kotlinx.android.synthetic.main.content_home.refreshButton
 
 class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, LifecycleRegistryOwner {
     private val registry = LifecycleRegistry(this)

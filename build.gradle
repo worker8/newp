@@ -6,14 +6,15 @@ buildscript {
         retrofitVersion = '2.3.0'
         okHttpVersion = '3.9.0'
         archComponentVersion = '1.0.0-alpha9'
-        supportVersion = '26.0.0'
+        supportVersion = '26.1.0'
     }
     repositories {
+        google()
         jcenter()
         maven { url 'http://download.crashlytics.com/maven' }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.3'
+        classpath 'com.android.tools.build:gradle:3.0.0'
         classpath 'com.crashlytics.tools.gradle:crashlytics-gradle:1.+'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         // NOTE: Do not place your application dependencies here; they belong
