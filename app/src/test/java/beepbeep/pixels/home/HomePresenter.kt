@@ -1,11 +1,13 @@
 package beepbeep.pixels.home
 
-import org.junit.Assert.assertEquals
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
 class HomePresenter {
+    
     @Test
     fun firstTest() {
-        assertEquals(4, (2 + 2).toLong())
+        assertThat(2 + 1, equalTo(3))
     }
 }
