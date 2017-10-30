@@ -1,4 +1,3 @@
-import android.util.Log
 import beepbeep.pixels.BuildConfig
 import io.reactivex.Observable
 import net.dean.jraw.RedditClient

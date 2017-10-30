@@ -2,21 +2,19 @@
 
 buildscript {
     ext {
-        kotlin_version = '1.1.50'
-        retrofitVersion = '2.3.0'
-        okHttpVersion = '3.9.0'
-        archComponentVersion = '1.0.0-alpha9'
-        supportVersion = '26.1.0'
+        kotlinVersion = '1.1.51'
     }
+
     repositories {
         google()
         jcenter()
         maven { url 'http://download.crashlytics.com/maven' }
     }
+
     dependencies {
         classpath 'com.android.tools.build:gradle:3.0.0'
         classpath 'com.crashlytics.tools.gradle:crashlytics-gradle:1.+'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -24,8 +22,8 @@ buildscript {
 
 allprojects {
     repositories {
-        maven { url "https://jitpack.io" }
         jcenter()
+        maven { url "https://jitpack.io" }
     }
 }
 
