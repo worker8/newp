@@ -33,7 +33,7 @@ android {
     def secretProperties = getSecretProperties(secretKeys)
     buildTypes.each { buildType ->
         secretKeys.each { key ->
-            buildType.buildConfigField 'String', key, "\"${secretProperties[key]}\""
+            buildType.buildConfigField 'String', key, "${secretProperties[key]}"
         }
     }
 
