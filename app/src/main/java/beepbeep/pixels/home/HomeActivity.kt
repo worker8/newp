@@ -11,6 +11,7 @@ import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import beepbeep.pixels.R
+import beepbeep.pixels.home.view.HomeAdapter
 import beepbeep.pixels.shared.extension.addTo
 import beepbeep.pixels.shared.extension.downScheduler
 import beepbeep.pixels.shared.extension.isConnectedToInternet
@@ -19,18 +20,17 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
-import kotlinx.android.synthetic.main.activity_home.drawerLayout
-import kotlinx.android.synthetic.main.activity_home.navigationView
-import kotlinx.android.synthetic.main.app_bar_home.toolbar
-import kotlinx.android.synthetic.main.content_home.homeMainContent
-import kotlinx.android.synthetic.main.content_home.loadMoreButton
-import kotlinx.android.synthetic.main.content_home.refreshButton
+import kotlinx.android.synthetic.main.activity_home.*
+import kotlinx.android.synthetic.main.app_bar_home.*
+import kotlinx.android.synthetic.main.content_home.*
 
 class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, LifecycleRegistryOwner {
     private val registry = LifecycleRegistry(this)
     override fun getLifecycle() = registry
 
     val retrySubject = PublishSubject.create<Unit>()
+
+    val homeAdapter = HomeAdapter()
 
     private val input by lazy {
         object : HomeContract.Input {
@@ -79,6 +79,8 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     }
                     .addTo(disposables)
         }
+
+        homeActRecyclerView.adapter = homeAdapter
     }
 
     override fun onDestroy() {
