@@ -13,8 +13,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <meta-data
-            android:name="com.crashlytics.ApiKey"
+            android:name="io.fabric.ApiKey"
             android:value="e7537482a77e19792c11a4aaaa42b361476b0d4f" />
 
         <activity

@@ -14,7 +14,8 @@ import beepbeep.pixels.R
 import beepbeep.pixels.shared.extension.addTo
 import beepbeep.pixels.shared.extension.downScheduler
 import beepbeep.pixels.shared.extension.isConnectedToInternet
-import com.jakewharton.rxbinding2.view.RxView
+import com.github.kittinunf.reactiveandroid.reactive.view.click
+import com.github.kittinunf.reactiveandroid.reactive.view.rx
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -37,12 +38,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             override fun isConnectedToInternet(): Boolean =
                     this@HomeActivity.isConnectedToInternet()
 
-            override val refresh: Observable<Any>by lazy {
-                RxView.clicks(refreshButton)
+            override val refresh: Observable<Any> by lazy {
+                refreshButton.rx.click().map { Any() }
             }
 
             override val loadMore: Observable<Any> by lazy {
-                RxView.clicks(loadMoreButton)
+                loadMoreButton.rx.click().map { Any() }
             }
 
             override val retry = retrySubject.hide()
