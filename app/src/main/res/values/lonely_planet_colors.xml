@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimaryLP">#1d508d</color>
+    <color name="colorPrimaryDarkLP">#142b44</color>
+    <color name="colorAccentLP">#ffc83f</color>
+
+    <color name="LP_colorTextNormal">#2c3643</color>
+    <color name="LP_colorTextHint">#99a9b3</color>
+
+
+</resources>

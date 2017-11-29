@@ -3,6 +3,7 @@ package beepbeep.pixels.home
 import RedditClientRepo
 import beepbeep.pixels.cache.submission.SubmissionCache
 import beepbeep.pixels.shared.PixelsApplication
+import beepbeep.pixels.shared.SubredditList
 import beepbeep.pixels.shared.extension.upScheduler
 import io.reactivex.Flowable
 import io.reactivex.Observable
@@ -57,9 +58,8 @@ class HomeRepo : HomeRepoInterface {
                 .createGuestRedditClient()
                 .doOnNext { redditClient = it }
                 .map {
-                    SubredditPaginator(it).also { _paginator ->
-                        paginator = _paginator
-                    }
+                    SubredditPaginator(it, SubredditList.art.name)
+                            .also { paginator = it }
                 }
                 .upScheduler(getBackgroundThread())
     }

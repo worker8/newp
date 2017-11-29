@@ -1,0 +1,14 @@
+<resources>
+    <attr name="textColorTitle" format="reference|color" />
+    <attr name="textColorPrimary" format="reference|color" />
+    <attr name="textColorPrimaryDark" format="reference|color" />
+    <attr name="textColorAccent" format="reference|color" />
+    <attr name="textColorNormal" format="reference|color" />
+    <attr name="textColorHint" format="reference|color" />
+
+    <attr name="textColorAuthor" format="reference|color" />
+
+    <attr name="appBarBackground" format="reference|color" />
+    <attr name="pixelBackgroundColor" format="reference|color" />
+    <attr name="pixelForegroundColor" format="reference|color" />
+</resources>

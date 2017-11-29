@@ -11,27 +11,28 @@ import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import beepbeep.pixels.R
+import beepbeep.pixels.home.view.HomeAdapter
 import beepbeep.pixels.shared.extension.addTo
 import beepbeep.pixels.shared.extension.downScheduler
 import beepbeep.pixels.shared.extension.isConnectedToInternet
+import beepbeep.pixels.shared.extension.upScheduler
 import com.github.kittinunf.reactiveandroid.reactive.view.click
 import com.github.kittinunf.reactiveandroid.reactive.view.rx
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
-import kotlinx.android.synthetic.main.activity_home.drawerLayout
-import kotlinx.android.synthetic.main.activity_home.navigationView
-import kotlinx.android.synthetic.main.app_bar_home.toolbar
-import kotlinx.android.synthetic.main.content_home.homeMainContent
-import kotlinx.android.synthetic.main.content_home.loadMoreButton
-import kotlinx.android.synthetic.main.content_home.refreshButton
+import kotlinx.android.synthetic.main.activity_home.*
+import kotlinx.android.synthetic.main.app_bar_home.*
+import kotlinx.android.synthetic.main.content_home.*
 
 class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, LifecycleRegistryOwner {
     private val registry = LifecycleRegistry(this)
     override fun getLifecycle() = registry
 
     val retrySubject = PublishSubject.create<Unit>()
+    val homeAdapter = HomeAdapter()
 
     private val input by lazy {
         object : HomeContract.Input {
@@ -54,6 +55,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+//        if (true) {
+//            setTheme(R.style.PixelsBaseAppTheme);
+//        } else {
+//            setTheme(R.style.PixelsBaseAppThemeDark);
+//        }
         setContentView(R.layout.activity_home)
         setSupportActionBar(toolbar)
 
@@ -79,6 +86,40 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                 .show();
                     }
                     .addTo(disposables)
+        }
+
+        // uncomment this to see crash T_T
+//        HomeRepo().bindToDb()?.also { submissionCacheListFlowable ->
+//            val _observable = submissionCacheListFlowable.toObservable().distinctUntilChanged().doOnNext {
+//                Log.d("ddw", "crash size: ${it.size}")
+//            }
+//            val _onCreateViewHolder: (ViewGroup?, Int) -> HomeViewHolder = { parent, _ ->
+//                val itemView = LayoutInflater.from(parent?.context).inflate(R.layout.view_holder_home, parent, false)
+//                HomeViewHolder(itemView)
+//            }
+//            val _onBindViewHolder = { viewHolder: HomeViewHolder, _: Int, submission: SubmissionCache ->
+//                viewHolder.bind(submission)
+//            }
+//
+//            homeActRecyclerView.rx
+//                    .bind<SubmissionCache, HomeViewHolder>(items = _observable,
+//                            onCreateViewHolder = _onCreateViewHolder,
+//                            onBindViewHolder = _onBindViewHolder)
+//                    .addTo(disposables)
+//        }
+
+        HomeRepo().bindToDb()?.apply {
+            upScheduler(Schedulers.io())
+                    .downScheduler(AndroidSchedulers.mainThread())
+                    .subscribe { listing ->
+                        homeAdapter.addPosts(listing)
+                        //listing.forEachIndexed { index, submissionCache ->
+                        //Log.d("ddw", "[${index}] ${submissionCache.author}: ${submissionCache.title}")
+                        //}
+                    }
+                    .addTo(disposables)
+
+            homeActRecyclerView.adapter = homeAdapter
         }
     }
 

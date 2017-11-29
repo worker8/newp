@@ -3,7 +3,6 @@ package beepbeep.pixels.home
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.OnLifecycleEvent
-import android.util.Log
 import beepbeep.pixels.cache.submission.SubmissionCache
 import beepbeep.pixels.shared.PixelsApplication
 import beepbeep.pixels.shared.extension.addTo
@@ -102,7 +101,7 @@ class HomePresenter(val input: HomeContract.Input, val repo: HomeRepoInterface =
                     .downScheduler(repo.getMainUiThread())
                     .subscribe { listing ->
                         listing.forEachIndexed { index, submissionCache ->
-                            Log.d("ddw", "[${index}] ${submissionCache.author}: ${submissionCache.title}")
+                            //Log.d("ddw", "[${index}] ${submissionCache.author}: ${submissionCache.title}")
                         }
                     }
                     .addTo(disposables)

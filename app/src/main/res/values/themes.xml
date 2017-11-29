@@ -1,0 +1,64 @@
+<resources>
+
+    <style name="PixelsBaseAppTheme" parent="AppTheme.NoActionBar">
+        <item name="textColorTitle">@color/colorPrimaryLP</item>
+        <item name="textColorPrimary">@color/colorPrimaryLP</item>
+        <item name="textColorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="textColorAccent">@color/colorAccentLP</item>
+        <item name="textColorNormal">@color/LP_colorTextNormal</item>
+        <item name="textColorHint">@color/LP_colorTextHint</item>
+        <item name="textColorAuthor">?textColorPrimaryDark</item>
+        <item name="pixelBackgroundColor">@drawable/hypnotize_tile_bg</item>
+        <item name="pixelForegroundColor">@color/snow</item>
+    </style>
+
+    <style name="PixelsBaseAppThemeDark" parent="AppTheme.NoActionBar">
+        <item name="textColorTitle">@color/material_amberA700</item>
+        <item name="textColorPrimary">@color/material_amberA700</item>
+        <item name="textColorPrimaryDark">@color/material_amberA700</item>
+        <item name="textColorAccent">@color/material_amberA700</item>
+        <item name="textColorNormal">@color/material_amberA700</item>
+        <item name="textColorHint">@color/material_amberA700</item>
+        <item name="textColorAuthor">@color/material_amberA700</item>
+        <item name="pixelBackgroundColor">@color/material_amberA700</item>
+        <item name="pixelForegroundColor">@color/material_amberA700</item>
+    </style>
+
+    <style name="StyleTitle" parent="StyleBase">
+        <item name="android:textColor">?textColorNormal</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="StyleAuthorSmall" parent="StyleBase">
+        <item name="android:textColor">?textColorPrimaryDark</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="StyleTitleSmall" parent="StyleBase">
+        <item name="android:textColor">?textColorNormal</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <style name="StyleBase">
+        <item name="android:fontFamily">sans-serif-condensed</item>
+    </style>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+</resources>
